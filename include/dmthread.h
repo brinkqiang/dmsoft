@@ -38,7 +38,7 @@ class IDMThreadCtrl {
   public:
     virtual ~IDMThreadCtrl() {}
 
-    virtual bool Start(IDMThread* poThread, bool bNeedWaitFor = true);
+    virtual bool Start(IDMThread* poThread, bool bNeedWaitFor = true) = 0;
     virtual void Stop() = 0;
 
     virtual void Resume() = 0;
@@ -65,16 +65,34 @@ class CDMThreadCtrl : public IDMThreadCtrl {
     }
 
   public:
-    virtual void Resume( void ) {
+
+    bool Start(IDMThread* poThread, bool bNeedWaitFor = true) {
+        m_poThread = poThread;
+
+        m_bNeedWaitFor = bNeedWaitFor;
+
+        std::unique_ptr<std::thread> oThread(new std::thread(StaticThreadFunc,
+            this));
+
+        m_oThread = std::move(oThread);
+
+        if (!bNeedWaitFor) {
+            m_oThread->detach();
+        }
+
+        return true;
+    }
+
+    virtual void Stop( void ) {
+        m_poThread->Terminate();
+    }
+
+    virtual void Resume(void) {
 
     }
 
     virtual void Suspend() {
 
-    }
-
-    virtual void Stop( void ) {
-        m_poThread->Terminate();
     }
 
     virtual bool Kill( unsigned int dwExitCode ) {
@@ -89,10 +107,6 @@ class CDMThreadCtrl : public IDMThreadCtrl {
         return true;
     }
 
-    virtual void Release( void ) {
-        delete this;
-    }
-
     virtual std::thread::id GetThreadID( void ) {
         return m_oThread->get_id();
     }
@@ -101,6 +115,10 @@ class CDMThreadCtrl : public IDMThreadCtrl {
         return m_poThread;
     }
 
+    virtual void Release(void) {
+        delete this;
+    }
+private:
     static void* StaticThreadFunc( void* arg ) {
         CDMThreadCtrl* poCtrl = ( CDMThreadCtrl* )arg;
         poCtrl->m_bIsStop = false;
@@ -109,22 +127,6 @@ class CDMThreadCtrl : public IDMThreadCtrl {
         return 0;
     }
 
-    bool Start( IDMThread* poThread, bool bNeedWaitFor = true ) {
-        m_poThread = poThread;
-
-        m_bNeedWaitFor = bNeedWaitFor;
-
-        std::unique_ptr<std::thread> oThread( new std::thread( StaticThreadFunc,
-                                              this ) );
-
-        m_oThread = std::move( oThread );
-
-        if ( !bNeedWaitFor ) {
-            m_oThread->detach();
-        }
-
-        return true;
-    }
 
   protected:
     volatile bool   m_bIsStop;
