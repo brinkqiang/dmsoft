@@ -40,6 +40,7 @@ class IDMThreadCtrl {
 
     virtual bool Start(IDMThread* poThread, bool bNeedWaitFor = true) = 0;
     virtual void Stop() = 0;
+    virtual void Terminate() = 0;
 
     virtual void Resume() = 0;
     virtual void Suspend() = 0;
@@ -85,6 +86,11 @@ class CDMThreadCtrl : public IDMThreadCtrl {
 
     virtual void Stop( void ) {
         m_poThread->Terminate();
+    }
+
+    virtual void Terminate()
+    {
+        Stop();
     }
 
     virtual void Resume(void) {
