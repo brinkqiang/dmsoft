@@ -37,13 +37,19 @@ class IDMThread {
 class IDMThreadCtrl {
   public:
     virtual ~IDMThreadCtrl() {}
+
+    virtual bool Start(IDMThread* poThread, bool bNeedWaitFor = true);
+    virtual void Stop() = 0;
+
     virtual void Resume() = 0;
     virtual void Suspend() = 0;
-    virtual void Stop() = 0;
+
     virtual bool Kill( unsigned int dwExitCode ) = 0;
     virtual bool WaitFor() = 0;
+
     virtual std::thread::id GetThreadID() = 0;
     virtual IDMThread* GetThread() = 0;
+
     virtual void Release() = 0;
 };
 
